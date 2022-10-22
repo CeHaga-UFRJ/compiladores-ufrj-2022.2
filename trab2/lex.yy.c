@@ -1944,7 +1944,17 @@ void F() {
       break;
     case '(': casa( '(' ); E(); casa( ')' ); break;
     case '+': casa( '+' ); F(); break;
-    case '-': casa( '-' ); print( "0" ); F(); print( "-" ); break;
+    case '-':
+      casa( '-' );
+      print( "0" );
+      F();
+      if(token == '^'){
+        casa('^');
+        F();
+        print( "^" );
+      }
+      print( "-" );
+      break;
     default:
       erro( "Operando esperado, encontrado " + lexema );
   }

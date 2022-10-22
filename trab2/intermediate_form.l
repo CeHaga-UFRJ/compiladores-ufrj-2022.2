@@ -58,6 +58,7 @@ PRINT [pP][rR][iI][nN][tT]
 
 %%
 
+// Funcoes auxiliares
 int next_token() {
   return yylex();
 }
@@ -89,6 +90,7 @@ int fatorial( int n ) {
     return n * fatorial( n - 1 );
 }
 
+// Funcoes do analisador sintatico
 void CMDs(){
   if(token){
     CMD();
@@ -104,6 +106,7 @@ void CMD(){
   }
 }
 
+// Parametros de funcao
 void PARAMS(){
   if(token != ')'){
     E();
@@ -114,6 +117,7 @@ void PARAMS(){
   }
 }
 
+// Atribuicao
 void A() {
   string temp = lexema; 
   casa( tk_id );
@@ -123,6 +127,7 @@ void A() {
   print( "=" );
 }
 
+// Soma e subtracao
 void E() {
   T();
   E_linha();
@@ -135,6 +140,7 @@ void E_linha() {
   }
 }
 
+// Multiplicacao e divisao
 void T() {
   EXP();
   T_linha();
@@ -147,6 +153,7 @@ void T_linha() {
   }
 }
 
+// Potenciacao
 void EXP(){
   F();
   EXP_linha();
@@ -158,36 +165,48 @@ void EXP_linha(){
   }
 }
 
+// Formula
 void F() {
   string temp;
   switch( token ) {
+    // Se id
     case tk_id:
       temp = lexema;
       casa( tk_id );
-      if(token == '('){
+      if(token == '('){ // Se funcao
         casa( '(' );
         PARAMS();
         casa( ')' );
         print( temp + " #" );
-      }else{
+      }else{ // Se variavel
         print( temp + " @" );
       }
       break;
-    case tk_cte_num:
+    case tk_cte_num: // Se numero
       temp = lexema;
       casa( tk_cte_num ); print( temp );
       break;
-    case tk_str:
+    case tk_str: // Se string
       temp = lexema;
       casa( tk_str ); print( temp );
       break;
     case '(': casa( '(' ); E(); casa( ')' ); break;
     case '+': casa( '+' ); F(); break;
-    case '-': casa( '-' ); print( "0" ); F(); print( "-" ); break;
+    case '-': // Menos unario
+      casa( '-' );
+      print( "0" );
+      F();
+      if(token == '^'){ // Se tem um expoente depois do menos unario
+        casa('^');
+        F();
+        print( "^" );
+      }
+      print( "-" );
+      break;
     default:
       erro( "Operando esperado, encontrado " + lexema );
   }
-  if(token == '!'){
+  if(token == '!'){ // Se tem fatorial
     casa( '!' );
     print( "fat #" );
   }
