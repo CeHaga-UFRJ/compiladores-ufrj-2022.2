@@ -484,6 +484,8 @@ void T();
 void F();
 void E_linha();
 void T_linha();
+void EXP();
+void EXP_linha();
 
 void casa( int );
 
@@ -494,8 +496,8 @@ map<int,string> nome_tokens = {
   { tk_cte_num, "constante inteira" }
 };
 
-#line 498 "lex.yy.c"
-#line 499 "lex.yy.c"
+#line 500 "lex.yy.c"
+#line 501 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -712,10 +714,10 @@ YY_DECL
 		}
 
 	{
-#line 44 "intermediate_form.l"
+#line 46 "intermediate_form.l"
 
 
-#line 719 "lex.yy.c"
+#line 721 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -775,41 +777,41 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 46 "intermediate_form.l"
+#line 48 "intermediate_form.l"
 { }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 47 "intermediate_form.l"
+#line 49 "intermediate_form.l"
 { lexema = strdup(yytext); return tk_cte_num; }
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 49 "intermediate_form.l"
+#line 51 "intermediate_form.l"
 { lexema = strdup(yytext); return tk_str; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 51 "intermediate_form.l"
+#line 53 "intermediate_form.l"
 { lexema = strdup(yytext); return tk_print; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 53 "intermediate_form.l"
+#line 55 "intermediate_form.l"
 { lexema = strdup(yytext); return tk_id; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 55 "intermediate_form.l"
+#line 57 "intermediate_form.l"
 { return yytext[0]; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 57 "intermediate_form.l"
+#line 59 "intermediate_form.l"
 ECHO;
 	YY_BREAK
-#line 813 "lex.yy.c"
+#line 815 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1814,7 +1816,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 57 "intermediate_form.l"
+#line 59 "intermediate_form.l"
 
 
 int next_token() {
@@ -1841,6 +1843,13 @@ string nome_token( int token ) {
   }
 }
 
+int fatorial( int n ) {
+  if( n == 0 )
+    return 1;
+  else
+    return n * fatorial( n - 1 );
+}
+
 void CMDs(){
   if(token){
     CMD();
@@ -1853,6 +1862,16 @@ void CMD(){
     case tk_id: A(); casa( ';' ); break;
     case tk_print: casa( tk_print ); E(); casa( ';' ); print( "print #" ); break;
     default: erro( "nao e atribuicao ou print" );
+  }
+}
+
+void PARAMS(){
+  if(token != ')'){
+    E();
+    if(token == ','){
+      casa( ',' );
+      PARAMS();
+    }
   }
 }
 
@@ -1878,14 +1897,25 @@ void E_linha() {
 }
 
 void T() {
-  F();
+  EXP();
   T_linha();
 }
 
 void T_linha() {
   switch( token ) {
-    case '*' : casa( '*' ); F(); print( "*" ); T_linha(); break;
-    case '/' : casa( '/' ); F(); print( "/" ); T_linha(); break;
+    case '*' : casa( '*' ); EXP(); print( "*" ); T_linha(); break;
+    case '/' : casa( '/' ); EXP(); print( "/" ); T_linha(); break;
+  }
+}
+
+void EXP(){
+  F();
+  EXP_linha();
+}
+
+void EXP_linha(){
+  switch( token ){
+    case '^' : casa( '^' ); F(); EXP_linha(); print( "^" ); break;
   }
 }
 
@@ -1894,7 +1924,15 @@ void F() {
   switch( token ) {
     case tk_id:
       temp = lexema;
-      casa( tk_id ); print( temp + " @" );
+      casa( tk_id );
+      if(token == '('){
+        casa( '(' );
+        PARAMS();
+        casa( ')' );
+        print( temp + " #" );
+      }else{
+        print( temp + " @" );
+      }
       break;
     case tk_cte_num:
       temp = lexema;
@@ -1909,6 +1947,10 @@ void F() {
     case '-': casa( '-' ); print( "0" ); F(); print( "-" ); break;
     default:
       erro( "Operando esperado, encontrado " + lexema );
+  }
+  if(token == '!'){
+    casa( '!' );
+    print( "fat #" );
   }
 }
 
