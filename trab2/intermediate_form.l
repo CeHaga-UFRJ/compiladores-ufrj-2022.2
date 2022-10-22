@@ -21,7 +21,7 @@ void T_linha();
 
 void casa( int );
 
-enum { tk_id = 256, tk_cte_num, tk_print };
+enum { tk_id = 256, tk_cte_num, tk_print, tk_str };
 
 map<int,string> nome_tokens = {
   { tk_id, "nome de identificador" },
@@ -37,12 +37,16 @@ LETRA	[A-Za-z_]
 NUM	{DIGITO}+(\.{DIGITO}+)?
 ID	{LETRA}({LETRA}|{DIGITO})*
 
+STR1DQ \"(\\.|\"\"|[^"])*\"
+
 PRINT [pP][rR][iI][nN][tT]
 
 %%
 
 {WS}  		{ }
 {NUM} 		{ lexema = strdup(yytext); return tk_cte_num; }
+
+{STR1DQ}	{ lexema = strdup(yytext); return tk_str; }
 
 {PRINT}		{ lexema = strdup(yytext); return tk_print; }
 
@@ -135,8 +139,12 @@ void F() {
       temp = lexema;
       casa( tk_cte_num ); print( temp );
       break;
+    case tk_str:
+      temp = lexema;
+      casa( tk_str ); print( temp );
+      break;
     case '(': casa( '(' ); E(); casa( ')' ); break;
-    case '+': casa( '+' ); F(); print( "+" ); break;
+    case '+': casa( '+' ); F(); break;
     case '-': casa( '-' ); print( "0" ); F(); print( "-" ); break;
     default:
       erro( "Operando esperado, encontrado " + lexema );
