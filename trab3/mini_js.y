@@ -41,10 +41,12 @@
     void printCode(Attributes a);
 %}
 
-%token NUM ID LET EQUAL SEMICOLON COMMA STR EMPTY_OBJ EMPTY_ARR
+%token NUM ID LET EQUAL SEMICOLON COMMA STR EMPTY_OBJ EMPTY_ARR OPEN_PAR CLOSE_PAR PLUS MULT PLUS_EQUAL
 
 %start S
 
+%left PLUS
+%left MULT
 %right EQUAL
 
 %%
@@ -69,12 +71,14 @@ DECL : ID { if(DEBUG) cerr << "DECL -> ID" << endl; checkVariableExists($1); $$ 
      ;
 
 ATR : ID EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $3 * $2 * "^"; }
+    | ID PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID PLUS_EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $1 * "@" * $3 * $2 * "^"; }
     ;
+
 LVALUE : ID { if(DEBUG) cerr << "LVALUE -> ID" << endl; $$ = $1; }
        ;
 
 RVALUE : EXPR { if(DEBUG) cerr << "RVALUE -> EXPR" << endl; $$ = $1; }
-       | LVALUE { if(DEBUG) cerr << "RVALUE -> LVALUE" << endl; $$ = $1; }
+       /*| LVALUE { if(DEBUG) cerr << "RVALUE -> LVALUE" << endl; $$ = $1 * "@"; }*/
        | ID EQUAL RVALUE { if(DEBUG) cerr << "RVALUE -> ID EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $3 * $2; } 
        ;
 
@@ -82,6 +86,10 @@ EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
      | STR { if(DEBUG) cerr << "EXPR -> STR" << endl; $$ = $1; }
      | EMPTY_ARR { if(DEBUG) cerr << "EXPR -> EMPTY_ARR" << endl; $$ = $1; }
      | EMPTY_OBJ { if(DEBUG) cerr << "EXPR -> EMPTY_OBJ" << endl; $$ = $1; }
+     | ID { if(DEBUG) cerr << "EXPR -> ID" << endl; checkVariableNew($1); $$ = $1 * "@"; }
+     | EXPR PLUS EXPR { if(DEBUG) cerr << "EXPR -> EXPR PLUS EXPR" << endl; $$ = $1 * $3 * $2; }
+     | EXPR MULT EXPR { if(DEBUG) cerr << "EXPR -> EXPR MULT EXPR" << endl; $$ = $1 * $3 * $2; }
+     | OPEN_PAR EXPR CLOSE_PAR { if(DEBUG) cerr << "EXPR -> OPEN_PAR EXPR CLOSE_PAR" << endl; $$ = $2; }
 %%
 
 #include "lex.yy.c"
