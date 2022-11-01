@@ -58,6 +58,8 @@
 %right PLUS_PLUS
 %right EQUAL
 
+%right CLOSE_PAR ELSE 
+
 %%
 
 S : CMDs { if(DEBUG) cerr << "S -> CMDs" << endl; printCode($1); }
@@ -89,6 +91,20 @@ CMD : LET DECLs SEMICOLON { if(DEBUG) cerr << "CMD -> LET DECLs SEMICOLON" << en
         string labelCodeWhile = generateLabel("LABEL_CODE_WHILE");
         $$ = (":" + labelStartWhile) * $3 * labelCodeWhile * "?" * labelEndWhile * "#" * (":" + labelCodeWhile) * $5 * labelStartWhile * "#" * (":" + labelEndWhile);
     }
+    | FOR OPEN_PAR ATRs SEMICOLON EXPR SEMICOLON ATR CLOSE_PAR CMD {
+        if(DEBUG) cerr << "CMD -> FOR OPEN_PAR ATRs SEMICOLON EXPR SEMICOLON ATR CLOSE_PAR CMD" << endl;
+        string labelStartFor = generateLabel("LABEL_START_FOR");
+        string labelEndFor = generateLabel("LABEL_END_FOR");
+        string labelCodeFor = generateLabel("LABEL_CODE_FOR");
+        $$ = $3 * (":" + labelStartFor) * $5 * labelCodeFor * "?" * labelEndFor * "#" * (":" + labelCodeFor) * $9 * $7 * labelStartFor * "#" * (":" + labelEndFor);
+    }
+    | FOR OPEN_PAR LET DECLs SEMICOLON EXPR SEMICOLON ATR CLOSE_PAR CMD {
+        if(DEBUG) cerr << "CMD -> FOR OPEN_PAR LET DECLs SEMICOLON EXPR SEMICOLON ATR CLOSE_PAR CMD" << endl;
+        string labelStartFor = generateLabel("LABEL_START_FOR");
+        string labelEndFor = generateLabel("LABEL_END_FOR");
+        string labelCodeFor = generateLabel("LABEL_CODE_FOR");
+        $$ = $4 * (":" + labelStartFor) * $6 * labelCodeFor * "?" * labelEndFor * "#" * (":" + labelCodeFor) * $10 * $8 * labelStartFor * "#" * (":" + labelEndFor);
+    }
     | OPEN_CURLY CMDs CLOSE_CURLY { if(DEBUG) cerr << "CMD -> OPEN_CURLY CMDs CLOSE_CURLY" << endl; $$ = $2; }
     | SEMICOLON { if(DEBUG) cerr << "CMD -> SEMICOLON" << endl; $$ = vector<string>(); }
     ;
@@ -108,6 +124,10 @@ FIELDS : DOT ID { if(DEBUG) cerr << "FIELDS -> DOT ID" << endl; $$ = $2; }
        | DOT ID FIELDS { if(DEBUG) cerr << "FIELDS -> DOT ID FIELDS" << endl; $$ = $2 * "[@]" * $3; }
        | OPEN_BRA RVALUE CLOSE_BRA FIELDS { if(DEBUG) cerr << "FIELDS -> OPEN_BRA RVALUE CLOSE_BRA FIELDS" << endl; $$ = $2 * "[@]" * $4; }
        ;
+
+ATRs : ATR { if(DEBUG) cerr << "ATRs -> ATR" << endl; $$ = $1; }
+     | ATRs COMMA ATR { if(DEBUG) cerr << "ATRs -> ATR COMMA ATRs" << endl; $$ = $1 * $3; }
+    ;
 
 ATR : ID EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $3 * $2 * "^"; }
     | ID PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID PLUS_EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $1 * "@" * $3 * $2 * "^"; }
