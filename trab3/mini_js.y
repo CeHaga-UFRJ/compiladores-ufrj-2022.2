@@ -37,14 +37,19 @@
     vector<string> toVector(string a);
     void checkVariableNew(Attributes a);
     void checkVariableExists(Attributes a);
+    string generateLabel( string prefix );
+    vector<string> resolve_enderecos( vector<string> entrada );
 
     void printCode(Attributes a);
 %}
 
 %token NUM ID LET EQUAL SEMICOLON COMMA STR EMPTY_OBJ EMPTY_ARR OPEN_PAR CLOSE_PAR OPEN_BRA CLOSE_BRA DOT PLUS MINUS MULT PLUS_EQUAL PLUS_PLUS
+%token GREATER LESS EQUAL_EQUAL
+%token IF ELSE WHILE FOR
 
 %start S
 
+%left GREATER LESS EQUAL_EQUAL
 %left PLUS MINUS
 %left MULT
 %right PLUS_PLUS
@@ -56,11 +61,18 @@ S : CMDs { if(DEBUG) cerr << "S -> CMDs" << endl; printCode($1); }
     ;
 
 CMDs : { if(DEBUG) cerr << "CMDs -> " << endl; $$ = vector<string>(); }
-     | CMD SEMICOLON CMDs { if(DEBUG) cerr << "CMDs -> CMD SEMICOLON CMDs" << endl; $$ = $1 * $3; }
+     | CMD CMDs { if(DEBUG) cerr << "CMDs -> CMD CMDs" << endl; $$ = $1 * $2; }
 ;
 
-CMD : LET DECLs { if(DEBUG) cerr << "CMD -> LET DECLs" << endl; $$ = $2; }
-    | ATR { if(DEBUG) cerr << "CMD -> ATR" << endl; $$ = $1; }
+CMD : LET DECLs SEMICOLON { if(DEBUG) cerr << "CMD -> LET DECLs SEMICOLON" << endl; $$ = $2; }
+    | ATR SEMICOLON { if(DEBUG) cerr << "CMD -> ATR SEMICOLON" << endl; $$ = $1; }
+    | IF OPEN_PAR EXPR CLOSE_PAR CMD {
+        if(DEBUG) cerr << "CMD -> IF OPEN_PAR EXPR CLOSE_PAR CMD" << endl;
+        string labelIf = generateLabel("LABEL_IF");
+        string labelEndIf = generateLabel("LABEL_END_IF");
+        $$ = $3 * labelIf * "?" * labelEndIf * "#" * (":" + labelIf) * $5 * (":" + labelEndIf);
+    }
+    | OPEN_BRA CMDs CLOSE_BRA { if(DEBUG) cerr << "CMD -> OPEN_BRA CMDs CLOSE_BRA" << endl; $$ = $2; }
     ;
 
 DECLs : DECL { if(DEBUG) cerr << "DECLs -> DECL" << endl; $$ = $1; }
@@ -100,6 +112,9 @@ EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
      | EXPR MULT EXPR { if(DEBUG) cerr << "EXPR -> EXPR MULT EXPR" << endl; $$ = $1 * $3 * $2; }
      | OPEN_PAR EXPR CLOSE_PAR { if(DEBUG) cerr << "EXPR -> OPEN_PAR EXPR CLOSE_PAR" << endl; $$ = $2; }
      | MINUS EXPR { if(DEBUG) cerr << "EXPR -> MINUS EXPR" << endl; $$ = "0" * $2 * "-"; }
+     | EXPR GREATER EXPR { if(DEBUG) cerr << "EXPR -> EXPR GREATER EXPR" << endl; $$ = $1 * $3 * $2; }
+     | EXPR LESS EXPR { if(DEBUG) cerr << "EXPR -> EXPR LESS EXPR" << endl; $$ = $1 * $3 * $2; }
+     | EXPR EQUAL_EQUAL EXPR { if(DEBUG) cerr << "EXPR -> EXPR EQUAL_EQUAL EXPR" << endl; $$ = $1 * $3 * $2; }
 %%
 
 #include "lex.yy.c"
@@ -153,7 +168,8 @@ vector<string> toVector(string a){
 }
 
 void printCode(Attributes a){
-    for(string s : a.c){
+    vector<string> output = resolve_enderecos(a.c);
+    for(string s : output){
         cout << s << endl;
     }
     cout << "." << endl;
@@ -172,4 +188,25 @@ void checkVariableExists(Attributes a){
         exit(1);
     }
     variables[a.c[0]] = a.line;
+}
+
+string generateLabel( string prefix ) {
+  static int n = 0;
+  return prefix + "_" + to_string( ++n ) + ":";
+}
+
+vector<string> resolve_enderecos( vector<string> entrada ) {
+  map<string,int> label;
+  vector<string> saida;
+  for( int i = 0; i < entrada.size(); i++ ) 
+    if( entrada[i][0] == ':' ) 
+        label[entrada[i].substr(1)] = saida.size();
+    else
+      saida.push_back( entrada[i] );
+  
+  for( int i = 0; i < saida.size(); i++ ) 
+    if( label.count( saida[i] ) > 0 )
+        saida[i] = to_string(label[saida[i]]);
+    
+  return saida;
 }

@@ -13,6 +13,10 @@ STR1SQ \'(\\.|\'\'|[^'])*\'
 {STR1SQ} { yylval.c = vector<string>(1, yytext); yylval.line = line; return STR; }
 
 "let"    { yylval.c = vector<string>(1, "&"); yylval.line = line; return LET; }
+"if"     { yylval.c = vector<string>(); yylval.line = line; return IF; }
+"else"   { yylval.c = vector<string>(); yylval.line = line; return ELSE; }
+"while"  { yylval.c = vector<string>(); yylval.line = line; return WHILE; }
+"for"    { yylval.c = vector<string>(); yylval.line = line; return FOR; }
 "="      { yylval.c = vector<string>(1, "="); yylval.line = line; return EQUAL; }
 ";"      { yylval.c = vector<string>(1, ";"); yylval.line = line; return SEMICOLON; }
 ","      { yylval.c = vector<string>(1, ","); yylval.line = line; return COMMA; }
@@ -28,7 +32,9 @@ STR1SQ \'(\\.|\'\'|[^'])*\'
 "*"      { yylval.c = vector<string>(1, "*"); yylval.line = line; return MULT; }
 "+="     { yylval.c = vector<string>{"+", "="}; yylval.line = line; return PLUS_EQUAL; }
 "++"     { yylval.c = vector<string>(); yylval.line = line; return PLUS_PLUS; }
-
+">"      { yylval.c = vector<string>(1, ">"); yylval.line = line; return GREATER; }
+"<"      { yylval.c = vector<string>(1, "<"); yylval.line = line; return LESS; }
+"=="     { yylval.c = vector<string>(1, "=="); yylval.line = line; return EQUAL_EQUAL; }
 
 {WS}     { }
 "\n"     { line++; }
