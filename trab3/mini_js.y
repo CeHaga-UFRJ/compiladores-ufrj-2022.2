@@ -45,6 +45,8 @@
 
 %start S
 
+%right EQUAL
+
 %%
 
 S : CMDs { if(DEBUG) cerr << "S -> CMDs" << endl; printCode($1); }
@@ -55,6 +57,7 @@ CMDs : { if(DEBUG) cerr << "CMDs -> " << endl; $$ = vector<string>(); }
 ;
 
 CMD : LET DECLs { if(DEBUG) cerr << "CMD -> LET DECLs" << endl; $$ = $2; }
+    | ATR { if(DEBUG) cerr << "CMD -> ATR" << endl; $$ = $1; }
     ;
 
 DECLs : DECL { if(DEBUG) cerr << "DECLs -> DECL" << endl; $$ = $1; }
@@ -65,16 +68,20 @@ DECL : ID { if(DEBUG) cerr << "DECL -> ID" << endl; checkVariableExists($1); $$ 
      | ID EQUAL RVALUE { if(DEBUG) cerr << "DECL -> ID EQUAL RVALUE" << endl; checkVariableExists($1); $$ = $1 * "&" * $1 * $3 * $2 * "^"; }
      ;
 
+ATR : ID EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $3 * $2 * "^"; }
+    ;
 LVALUE : ID { if(DEBUG) cerr << "LVALUE -> ID" << endl; $$ = $1; }
        ;
 
-RVALUE : NUM { if(DEBUG) cerr << "RVALUE -> NUM" << endl; $$ = $1; }
-       | STR { if(DEBUG) cerr << "RVALUE -> STR" << endl; $$ = $1; }
-       | EMPTY_ARR { if(DEBUG) cerr << "RVALUE -> EMPTY_ARR" << endl; $$ = $1; }
-       | EMPTY_OBJ { if(DEBUG) cerr << "RVALUE -> EMPTY_OBJ" << endl; $$ = $1; }
+RVALUE : EXPR { if(DEBUG) cerr << "RVALUE -> EXPR" << endl; $$ = $1; }
        | LVALUE { if(DEBUG) cerr << "RVALUE -> LVALUE" << endl; $$ = $1; }
+       | ID EQUAL RVALUE { if(DEBUG) cerr << "RVALUE -> ID EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $3 * $2; } 
        ;
-    ;
+
+EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
+     | STR { if(DEBUG) cerr << "EXPR -> STR" << endl; $$ = $1; }
+     | EMPTY_ARR { if(DEBUG) cerr << "EXPR -> EMPTY_ARR" << endl; $$ = $1; }
+     | EMPTY_OBJ { if(DEBUG) cerr << "EXPR -> EMPTY_OBJ" << endl; $$ = $1; }
 %%
 
 #include "lex.yy.c"
@@ -136,7 +143,7 @@ void printCode(Attributes a){
 
 void checkVariableNew(Attributes a){
     if(variables.find(a.c[0]) == variables.end()){
-        yyerror("Variable not declared");
+        cout << "Erro: a variável '" << a.c[0] << "' não foi declarada." << endl;
         exit(1);
     }
 }

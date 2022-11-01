@@ -4,11 +4,13 @@ LETRA     [a-zA-Z_]
 DOUBLE  {DIGITO}+("."{DIGITO}+)?
 ID      {LETRA}({LETRA}|{DIGITO})*
 STR1DQ \"(\\.|\"\"|[^"])*\"
+STR1SQ \'(\\.|\'\'|[^'])*\'
 
 %%
 
 {DOUBLE} { yylval.c = vector<string>(1, yytext); yylval.line = line; return NUM; }
 {STR1DQ} { yylval.c = vector<string>(1, yytext); yylval.line = line; return STR; }
+{STR1SQ} { yylval.c = vector<string>(1, yytext); yylval.line = line; return STR; }
 
 "let"    { yylval.c = vector<string>(1, "&"); yylval.line = line; return LET; }
 "="      { yylval.c = vector<string>(1, "="); yylval.line = line; return EQUAL; }

@@ -1,3 +1,1 @@
-let a;
-let b;
-let b;
+let a = '2';
