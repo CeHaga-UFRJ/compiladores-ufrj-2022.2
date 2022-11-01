@@ -137,6 +137,7 @@ ATR : ID EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID EQUAL RVALUE" << endl; chec
 
 RVALUE : EXPR { if(DEBUG) cerr << "RVALUE -> EXPR" << endl; $$ = $1; }
        | ID EQUAL RVALUE { if(DEBUG) cerr << "RVALUE -> ID EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $3 * $2; } 
+       | ID FIELDS EQUAL RVALUE { if(DEBUG) cerr << "RVALUE -> ID FIELDS EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * "@" * $2 * $4 * "[=]"; }
        ;
 
 EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
