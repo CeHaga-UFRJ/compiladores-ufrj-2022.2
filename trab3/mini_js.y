@@ -45,7 +45,7 @@
 
 %token NUM ID LET SEMICOLON COMMA DOT
 %token STR EMPTY_OBJ EMPTY_ARR
-%token EQUAL PLUS MINUS MULT PLUS_EQUAL PLUS_PLUS
+%token EQUAL PLUS MINUS MULT DIV PLUS_EQUAL PLUS_PLUS
 %token GREATER LESS EQUAL_EQUAL
 %token IF ELSE WHILE FOR
 %token OPEN_PAR CLOSE_PAR OPEN_BRA CLOSE_BRA OPEN_CURLY CLOSE_CURLY
@@ -54,7 +54,7 @@
 
 %left GREATER LESS EQUAL_EQUAL
 %left PLUS MINUS
-%left MULT
+%left MULT DIV
 %right PLUS_PLUS
 %right EQUAL
 
@@ -82,7 +82,15 @@ CMD : LET DECLs SEMICOLON { if(DEBUG) cerr << "CMD -> LET DECLs SEMICOLON" << en
         string labelEndIf = generateLabel("LABEL_END_IF");
         $$ = $3 * labelIf * "?" * labelElse * "#" * (":" + labelIf) * $5 * labelEndIf * "#" * (":" + labelElse) * $7 * (":" + labelEndIf);
     }
+    | WHILE OPEN_PAR EXPR CLOSE_PAR CMD {
+        if(DEBUG) cerr << "CMD -> WHILE OPEN_PAR EXPR CLOSE_PAR CMD" << endl;
+        string labelStartWhile = generateLabel("LABEL_START_WHILE");
+        string labelEndWhile = generateLabel("LABEL_END_WHILE");
+        string labelCodeWhile = generateLabel("LABEL_CODE_WHILE");
+        $$ = (":" + labelStartWhile) * $3 * labelCodeWhile * "?" * labelEndWhile * "#" * (":" + labelCodeWhile) * $5 * labelStartWhile * "#" * (":" + labelEndWhile);
+    }
     | OPEN_CURLY CMDs CLOSE_CURLY { if(DEBUG) cerr << "CMD -> OPEN_CURLY CMDs CLOSE_CURLY" << endl; $$ = $2; }
+    | SEMICOLON { if(DEBUG) cerr << "CMD -> SEMICOLON" << endl; $$ = vector<string>(); }
     ;
 
 DECLs : DECL { if(DEBUG) cerr << "DECLs -> DECL" << endl; $$ = $1; }
@@ -119,7 +127,9 @@ EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
      | ID PLUS_PLUS { if(DEBUG) cerr << "EXPR -> ID PLUS_PLUS" << endl; $$ = $1 * $1 * "@" * "1" * "+" * "=" * "1" * "-"; }
      | ID FIELDS { if(DEBUG) cerr << "EXPR -> ID FIELDS" << endl; checkVariableNew($1); $$ = $1 * "@" * $2 * "[@]"; }
      | EXPR PLUS EXPR { if(DEBUG) cerr << "EXPR -> EXPR PLUS EXPR" << endl; $$ = $1 * $3 * $2; }
+     | EXPR MINUS EXPR { if(DEBUG) cerr << "EXPR -> EXPR MINUS EXPR" << endl; $$ = $1 * $3 * $2; }
      | EXPR MULT EXPR { if(DEBUG) cerr << "EXPR -> EXPR MULT EXPR" << endl; $$ = $1 * $3 * $2; }
+     | EXPR DIV EXPR { if(DEBUG) cerr << "EXPR -> EXPR DIV EXPR" << endl; $$ = $1 * $3 * $2; }
      | OPEN_PAR EXPR CLOSE_PAR { if(DEBUG) cerr << "EXPR -> OPEN_PAR EXPR CLOSE_PAR" << endl; $$ = $2; }
      | MINUS EXPR { if(DEBUG) cerr << "EXPR -> MINUS EXPR" << endl; $$ = "0" * $2 * "-"; }
      | EXPR GREATER EXPR { if(DEBUG) cerr << "EXPR -> EXPR GREATER EXPR" << endl; $$ = $1 * $3 * $2; }
