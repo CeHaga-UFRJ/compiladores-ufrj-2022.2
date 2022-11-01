@@ -41,12 +41,13 @@
     void printCode(Attributes a);
 %}
 
-%token NUM ID LET EQUAL SEMICOLON COMMA STR EMPTY_OBJ EMPTY_ARR OPEN_PAR CLOSE_PAR PLUS MULT PLUS_EQUAL
+%token NUM ID LET EQUAL SEMICOLON COMMA STR EMPTY_OBJ EMPTY_ARR OPEN_PAR CLOSE_PAR OPEN_BRA CLOSE_BRA DOT PLUS MINUS MULT PLUS_EQUAL PLUS_PLUS
 
 %start S
 
-%left PLUS
+%left PLUS MINUS
 %left MULT
+%right PLUS_PLUS
 %right EQUAL
 
 %%
@@ -68,17 +69,23 @@ DECLs : DECL { if(DEBUG) cerr << "DECLs -> DECL" << endl; $$ = $1; }
 
 DECL : ID { if(DEBUG) cerr << "DECL -> ID" << endl; checkVariableExists($1); $$ = $1 * "&"; }
      | ID EQUAL RVALUE { if(DEBUG) cerr << "DECL -> ID EQUAL RVALUE" << endl; checkVariableExists($1); $$ = $1 * "&" * $1 * $3 * $2 * "^"; }
+     | ID FIELDS { if(DEBUG) cerr << "DECL -> ID FIELDS" << endl; checkVariableExists($1); $$ = $1 * "@"; }
+     | ID FIELDS EQUAL RVALUE { if(DEBUG) cerr << "DECL -> ID FIELDS EQUAL RVALUE" << endl; checkVariableExists($1); $$ = $1 * "@" * $1 * $3 * $2 * "^"; }
      ;
+
+FIELDS : DOT ID { if(DEBUG) cerr << "FIELDS -> DOT ID" << endl; $$ = $2; }
+       | OPEN_BRA RVALUE CLOSE_BRA { if(DEBUG) cerr << "FIELDS -> OPEN_BRA RVALUE CLOSE_BRA" << endl; $$ = $2; }
+       | DOT ID FIELDS { if(DEBUG) cerr << "FIELDS -> DOT ID FIELDS" << endl; $$ = $2 * "[@]" * $3; }
+       | OPEN_BRA RVALUE CLOSE_BRA FIELDS { if(DEBUG) cerr << "FIELDS -> OPEN_BRA RVALUE CLOSE_BRA FIELDS" << endl; $$ = $2 * "[@]" * $4; }
+       ;
 
 ATR : ID EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $3 * $2 * "^"; }
     | ID PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID PLUS_EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $1 * "@" * $3 * $2 * "^"; }
+    | ID FIELDS PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID FIELDS PLUS_EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * "@" * $2 * $1 * "@" * $2 * "[@]" * $4 * "+" * "[=]" * "^"; }
+    | ID FIELDS EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID FIELDS EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * "@" * $2 * $4 * "[=]" * "^"; }
     ;
 
-LVALUE : ID { if(DEBUG) cerr << "LVALUE -> ID" << endl; $$ = $1; }
-       ;
-
 RVALUE : EXPR { if(DEBUG) cerr << "RVALUE -> EXPR" << endl; $$ = $1; }
-       /*| LVALUE { if(DEBUG) cerr << "RVALUE -> LVALUE" << endl; $$ = $1 * "@"; }*/
        | ID EQUAL RVALUE { if(DEBUG) cerr << "RVALUE -> ID EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $3 * $2; } 
        ;
 
@@ -86,10 +93,13 @@ EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
      | STR { if(DEBUG) cerr << "EXPR -> STR" << endl; $$ = $1; }
      | EMPTY_ARR { if(DEBUG) cerr << "EXPR -> EMPTY_ARR" << endl; $$ = $1; }
      | EMPTY_OBJ { if(DEBUG) cerr << "EXPR -> EMPTY_OBJ" << endl; $$ = $1; }
-     | ID { if(DEBUG) cerr << "EXPR -> ID" << endl; checkVariableNew($1); $$ = $1 * "@"; }
+     | ID { if(DEBUG) cerr << "EXPR -> LVALUE" << endl; checkVariableNew($1); $$ = $1 * "@"; }
+     | ID PLUS_PLUS { if(DEBUG) cerr << "EXPR -> ID PLUS_PLUS" << endl; $$ = $1 * $1 * "@" * "1" * "+" * "=" * "1" * "-"; }
+     | ID FIELDS { if(DEBUG) cerr << "EXPR -> ID FIELDS" << endl; checkVariableNew($1); $$ = $1 * "@" * $2 * "[@]"; }
      | EXPR PLUS EXPR { if(DEBUG) cerr << "EXPR -> EXPR PLUS EXPR" << endl; $$ = $1 * $3 * $2; }
      | EXPR MULT EXPR { if(DEBUG) cerr << "EXPR -> EXPR MULT EXPR" << endl; $$ = $1 * $3 * $2; }
      | OPEN_PAR EXPR CLOSE_PAR { if(DEBUG) cerr << "EXPR -> OPEN_PAR EXPR CLOSE_PAR" << endl; $$ = $2; }
+     | MINUS EXPR { if(DEBUG) cerr << "EXPR -> MINUS EXPR" << endl; $$ = "0" * $2 * "-"; }
 %%
 
 #include "lex.yy.c"

@@ -20,9 +20,14 @@ STR1SQ \'(\\.|\'\'|[^'])*\'
 "[]"     { yylval.c = vector<string>(1, "[]"); yylval.line = line; return EMPTY_ARR; }
 "("      { yylval.c = vector<string>(1, "("); yylval.line = line; return OPEN_PAR; }
 ")"      { yylval.c = vector<string>(1, ")"); yylval.line = line; return CLOSE_PAR; }
+"["      { yylval.c = vector<string>(1, "["); yylval.line = line; return OPEN_BRA; }
+"]"      { yylval.c = vector<string>(1, "]"); yylval.line = line; return CLOSE_BRA; }
+"."      { yylval.c = vector<string>(1, "."); yylval.line = line; return DOT; }
 "+"      { yylval.c = vector<string>(1, "+"); yylval.line = line; return PLUS; }
+"-"      { yylval.c = vector<string>(1, "-"); yylval.line = line; return MINUS; }
 "*"      { yylval.c = vector<string>(1, "*"); yylval.line = line; return MULT; }
 "+="     { yylval.c = vector<string>{"+", "="}; yylval.line = line; return PLUS_EQUAL; }
+"++"     { yylval.c = vector<string>(); yylval.line = line; return PLUS_PLUS; }
 
 
 {WS}     { }
