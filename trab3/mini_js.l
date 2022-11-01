@@ -26,6 +26,8 @@ STR1SQ \'(\\.|\'\'|[^'])*\'
 ")"      { yylval.c = vector<string>(1, ")"); yylval.line = line; return CLOSE_PAR; }
 "["      { yylval.c = vector<string>(1, "["); yylval.line = line; return OPEN_BRA; }
 "]"      { yylval.c = vector<string>(1, "]"); yylval.line = line; return CLOSE_BRA; }
+"{"      { yylval.c = vector<string>(1, "{"); yylval.line = line; return OPEN_CURLY; }
+"}"      { yylval.c = vector<string>(1, "}"); yylval.line = line; return CLOSE_CURLY; }
 "."      { yylval.c = vector<string>(1, "."); yylval.line = line; return DOT; }
 "+"      { yylval.c = vector<string>(1, "+"); yylval.line = line; return PLUS; }
 "-"      { yylval.c = vector<string>(1, "-"); yylval.line = line; return MINUS; }

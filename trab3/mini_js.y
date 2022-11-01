@@ -43,9 +43,12 @@
     void printCode(Attributes a);
 %}
 
-%token NUM ID LET EQUAL SEMICOLON COMMA STR EMPTY_OBJ EMPTY_ARR OPEN_PAR CLOSE_PAR OPEN_BRA CLOSE_BRA DOT PLUS MINUS MULT PLUS_EQUAL PLUS_PLUS
+%token NUM ID LET SEMICOLON COMMA DOT
+%token STR EMPTY_OBJ EMPTY_ARR
+%token EQUAL PLUS MINUS MULT PLUS_EQUAL PLUS_PLUS
 %token GREATER LESS EQUAL_EQUAL
 %token IF ELSE WHILE FOR
+%token OPEN_PAR CLOSE_PAR OPEN_BRA CLOSE_BRA OPEN_CURLY CLOSE_CURLY
 
 %start S
 
@@ -72,7 +75,14 @@ CMD : LET DECLs SEMICOLON { if(DEBUG) cerr << "CMD -> LET DECLs SEMICOLON" << en
         string labelEndIf = generateLabel("LABEL_END_IF");
         $$ = $3 * labelIf * "?" * labelEndIf * "#" * (":" + labelIf) * $5 * (":" + labelEndIf);
     }
-    | OPEN_BRA CMDs CLOSE_BRA { if(DEBUG) cerr << "CMD -> OPEN_BRA CMDs CLOSE_BRA" << endl; $$ = $2; }
+    | IF OPEN_PAR EXPR CLOSE_PAR CMD ELSE CMD {
+        if(DEBUG) cerr << "CMD -> IF OPEN_PAR EXPR CLOSE_PAR CMD ELSE CMD" << endl;
+        string labelIf = generateLabel("LABEL_IF");
+        string labelElse = generateLabel("LABEL_ELSE");
+        string labelEndIf = generateLabel("LABEL_END_IF");
+        $$ = $3 * labelIf * "?" * labelElse * "#" * (":" + labelIf) * $5 * labelEndIf * "#" * (":" + labelElse) * $7 * (":" + labelEndIf);
+    }
+    | OPEN_CURLY CMDs CLOSE_CURLY { if(DEBUG) cerr << "CMD -> OPEN_CURLY CMDs CLOSE_CURLY" << endl; $$ = $2; }
     ;
 
 DECLs : DECL { if(DEBUG) cerr << "DECLs -> DECL" << endl; $$ = $1; }

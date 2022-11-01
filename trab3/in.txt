@@ -1,6 +1,10 @@
-let a = 4, b = 5, c, d;
-if( a++ > b )
-  c = "a e' maior"
-      + "!";
-if( a < b + 1 )
-  d = "a e' menor";
+let a = "ABA", c = 'CATE', resultado;
+if( a == c )
+  resultado = "Ta' errado!";
+else if( a < c )
+{
+  resultado = "a vem antes de c: ";
+  resultado += a + '<' + c ;
+}
+else
+  resultado = "Deu ruim!";
