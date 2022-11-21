@@ -143,15 +143,21 @@ ATRs : ATR { if(DEBUG) cerr << "ATRs -> ATR" << endl; $$ = $1; }
      | ATRs COMMA ATR { if(DEBUG) cerr << "ATRs -> ATR COMMA ATRs" << endl; $$ = $1 * $3; }
     ;
 
-ATR : ID EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $3 * $2 * "^"; }
-    | ID PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID PLUS_EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $1 * "@" * $3 * $2 * "^"; }
-    | ID FIELDS PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID FIELDS PLUS_EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * "@" * $2 * $1 * "@" * $2 * "[@]" * $4 * "+" * "[=]" * "^"; }
-    | ID FIELDS EQUAL RVALUE { if(DEBUG) cerr << "ATR -> ID FIELDS EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * "@" * $2 * $4 * "[=]" * "^"; }
+ATR : LVALUE EQUAL RVALUE { if(DEBUG) cerr << "ATR -> LVALUE EQUAL RVALUE" << endl; $$ = $1 * $3 * "=" * "^"; }
+    | LVALUE PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> LVALUE PLUS_EQUAL RVALUE" << endl; $$ = $1 * $1 * "@" * $3 * "+" * "=" * "^"; }
+    | LVALUEPROP PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> LVALUEPROP PLUS_EQUAL RVALUE" << endl; $$ = $1 * $1 * "[@]" * $3 * "+" * "[=]" * "^"; }
+    | LVALUEPROP EQUAL RVALUE { if(DEBUG) cerr << "ATR -> LVALUEPROP EQUAL RVALUE" << endl; $$ = $1 * $3 * "[=]" * "^"; }
     ;
 
+LVALUE : ID { if(DEBUG) cerr << "LVALUE -> ID" << endl; checkVariableNew($1); $$ = $1; }
+       ;
+
+LVALUEPROP : ID FIELDS { if(DEBUG) cerr << "LVALUEPROP -> ID FIELDS" << endl; checkVariableNew($1); $$ = $1 * "@" * $2; }
+           ;
+
 RVALUE : EXPR { if(DEBUG) cerr << "RVALUE -> EXPR" << endl; $$ = $1; }
-       | ID EQUAL RVALUE { if(DEBUG) cerr << "RVALUE -> ID EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * $3 * $2; } 
-       | ID FIELDS EQUAL RVALUE { if(DEBUG) cerr << "RVALUE -> ID FIELDS EQUAL RVALUE" << endl; checkVariableNew($1); $$ = $1 * "@" * $2 * $4 * "[=]"; }
+       | LVALUE EQUAL RVALUE { if(DEBUG) cerr << "RVALUE -> LVALUE EQUAL RVALUE" << endl; $$ = $1 * $3 * $2; } 
+       | LVALUEPROP EQUAL RVALUE { if(DEBUG) cerr << "RVALUE -> LVALUEPROP EQUAL RVALUE" << endl; $$ = $1 * $3 * "[=]"; }
        ;
 
 EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }

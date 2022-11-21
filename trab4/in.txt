@@ -1,11 +1,3 @@
-let b, c;
-{ const a = 0;
-  var c;
-}
-let a = 8;
-if( a ) {[];}
-else {
-  let b, d = { };
-}
-let d;
-let a;
+let a = 1, b;
+b = a.c = 2;
+b.d = a = 3;
