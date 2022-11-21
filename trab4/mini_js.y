@@ -43,11 +43,13 @@
 
     
     vector<map<string,int>> variables;
+    struct Attributes functions;
     int line = 1;
     int actualScope = -1;
+    int actualParam = 0;
 %}
 
-%token NUM ID LET VAR CONST SEMICOLON COMMA DOT
+%token NUM ID LET VAR CONST SEMICOLON COMMA DOT FUNCTION
 %token STR EMPTY_OBJ EMPTY_ARR
 %token EQUAL PLUS MINUS MULT DIV PLUS_EQUAL PLUS_PLUS
 %token GREATER LESS EQUAL_EQUAL
@@ -112,9 +114,27 @@ CMD : LET DECLs SEMICOLON { if(DEBUG) cerr << "CMD -> LET DECLs SEMICOLON" << en
         string labelCodeFor = generateLabel("LABEL_CODE_FOR");
         $$ = $4 * (":" + labelStartFor) * $6 * labelCodeFor * "?" * labelEndFor * "#" * (":" + labelCodeFor) * $10 * $8 * labelStartFor * "#" * (":" + labelEndFor);
     }
+    | FUNCTION ID OPEN_PAR { actualParam = 0; } PARAMS CLOSE_PAR BLOCK {
+        if(DEBUG) cerr << "CMD -> FUNCTION ID OPEN_PAR PARAMS CLOSE_PAR BLOCK" << endl;
+        string labelStartFunction = generateLabel("LABEL_START_FUNCTION");
+        functions = functions * (":" + labelStartFunction) * $5 * $7 * "undefined" * "@" * "'&retorno'" * "@" * "~";
+        $$ = $2 * "&" * $2 * "{}" * "=" * "'&funcao'" * labelStartFunction * "[=]" * "^";
+    }
     | BLOCK { if(DEBUG) cerr << "CMD -> BLOCK" << endl; $$ = $1; }
     | SEMICOLON { if(DEBUG) cerr << "CMD -> SEMICOLON" << endl; $$ = vector<string>(); }
     ;
+
+PARAMS : ID COMMA { actualParam++; } PARAMS {
+            if(DEBUG) cerr << "PARAMS -> ID COMMA PARAMS" << endl;
+            actualParam--;
+            $$ = $1 * "&" * $1 * "arguments" * "@" * to_string(actualParam) * "[@]" * "=" * "^" * $4;
+        }
+       | ID {
+            if(DEBUG) cerr << "PARAMS -> ID" << endl;
+            $$ = $1 * "&" * $1 * "arguments" * "@" * to_string(actualParam) * "[@]" * "=" * "^";
+        }
+       | { if(DEBUG) cerr << "PARAMS -> " << endl; $$ = vector<string>(); }
+       ;
 
 BLOCK : OPEN_CURLY {addScope();} CMD CMDs CLOSE_CURLY {
             if(DEBUG) cerr << "BLOCK -> OPEN_CURLY CMD CMDs CLOSE_CURLY" << endl;
@@ -182,6 +202,7 @@ EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
 
 int main(){
     addScope();
+    functions.c = vector<string>();
     yyparse();
     removeScope();
     return 0;
@@ -231,11 +252,11 @@ vector<string> toVector(string a){
 }
 
 void printCode(Attributes a){
-    vector<string> output = resolve_enderecos(a.c);
+    Attributes finalCode = a * "." * functions;
+    vector<string> output = resolve_enderecos(finalCode.c);
     for(string s : output){
         cout << s << endl;
     }
-    cout << "." << endl;
 }
 
 void checkVariableNew(Attributes a){

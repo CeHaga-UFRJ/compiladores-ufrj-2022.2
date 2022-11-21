@@ -1,3 +1,7 @@
-let a = 1, b;
-b = a.c = 2;
-b.d = a = 3;
+let a;
+function b(d,e){
+    let c;
+}
+function outrafuncao(a,b,c){
+  let x;
+}
