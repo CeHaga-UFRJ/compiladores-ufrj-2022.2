@@ -1,7 +1,8 @@
-let a;
-function b(d,e){
-    let c;
-}
-function outrafuncao(a,b,c){
-  let x;
-}
+let str = "hello";
+function valor() { return str + ", world"; }
+var a = valor();
+str = "HELLO";;;
+var b = valor
+(
+)
+;

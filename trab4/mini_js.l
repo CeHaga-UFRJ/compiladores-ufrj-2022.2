@@ -22,6 +22,7 @@ EMPTY_OBJECT \{([ \t\n])*\}
 "while"         { yylval.c = vector<string>(); yylval.line = line; return WHILE; }
 "for"           { yylval.c = vector<string>(); yylval.line = line; return FOR; }
 "function"      { yylval.c = vector<string>(); yylval.line = line; return FUNCTION; }
+"return"        { yylval.c = vector<string>(); yylval.line = line; return RETURN; }
 "="             { yylval.c = vector<string>(1, "="); yylval.line = line; return EQUAL; }
 ";"             { yylval.c = vector<string>(1, ";"); yylval.line = line; return SEMICOLON; }
 ","             { yylval.c = vector<string>(1, ","); yylval.line = line; return COMMA; }

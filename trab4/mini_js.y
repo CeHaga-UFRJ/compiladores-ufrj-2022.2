@@ -47,9 +47,11 @@
     int line = 1;
     int actualScope = -1;
     int actualParam = 0;
+    vector<int> totalParamsFunction;
+    int functionCalling = -1;
 %}
 
-%token NUM ID LET VAR CONST SEMICOLON COMMA DOT FUNCTION
+%token NUM ID LET VAR CONST SEMICOLON COMMA DOT FUNCTION RETURN
 %token STR EMPTY_OBJ EMPTY_ARR
 %token EQUAL PLUS MINUS MULT DIV PLUS_EQUAL PLUS_PLUS
 %token GREATER LESS EQUAL_EQUAL
@@ -79,7 +81,8 @@ CMD : LET DECLs SEMICOLON { if(DEBUG) cerr << "CMD -> LET DECLs SEMICOLON" << en
     | VAR DECLs SEMICOLON { if(DEBUG) cerr << "CMD -> VAR DECLs SEMICOLON" << endl; $$ = $2; }
     | CONST DECLs SEMICOLON { if(DEBUG) cerr << "CMD -> CONST DECLs SEMICOLON" << endl; $$ = $2; }
     | ATR SEMICOLON { if(DEBUG) cerr << "CMD -> ATR SEMICOLON" << endl; $$ = $1; }
-    | EXPR SEMICOLON { if(DEBUG) cerr << "CMD -> EXPR SEMICOLON" << endl; $$.c = vector<string>(); }
+    | EXPR SEMICOLON { if(DEBUG) cerr << "CMD -> EXPR SEMICOLON" << endl; $$ = $1 * "^"; }
+    | RETURN RVALUE SEMICOLON { if(DEBUG) cerr << "CMD -> RETURN RVALUE SEMICOLON" << endl; $$ = $2 * "'&retorno'" * "@" * "~"; }
     | IF OPEN_PAR EXPR CLOSE_PAR CMD {
         if(DEBUG) cerr << "CMD -> IF OPEN_PAR EXPR CLOSE_PAR CMD" << endl;
         string labelIf = generateLabel("LABEL_IF");
@@ -114,26 +117,31 @@ CMD : LET DECLs SEMICOLON { if(DEBUG) cerr << "CMD -> LET DECLs SEMICOLON" << en
         string labelCodeFor = generateLabel("LABEL_CODE_FOR");
         $$ = $4 * (":" + labelStartFor) * $6 * labelCodeFor * "?" * labelEndFor * "#" * (":" + labelCodeFor) * $10 * $8 * labelStartFor * "#" * (":" + labelEndFor);
     }
-    | FUNCTION ID OPEN_PAR { actualParam = 0; } PARAMS CLOSE_PAR BLOCK {
-        if(DEBUG) cerr << "CMD -> FUNCTION ID OPEN_PAR PARAMS CLOSE_PAR BLOCK" << endl;
+    | FUNCTION ID OPEN_PAR { actualParam = 0; checkVariableExists($2); addScope(); } PARAMS CLOSE_PAR OPEN_CURLY CMDs CLOSE_CURLY {
+        if(DEBUG) cerr << "CMD -> FUNCTION ID OPEN_PAR PARAMS CLOSE_PAR OPEN_CURLY " << endl;
         string labelStartFunction = generateLabel("LABEL_START_FUNCTION");
-        functions = functions * (":" + labelStartFunction) * $5 * $7 * "undefined" * "@" * "'&retorno'" * "@" * "~";
+        functions = functions * (":" + labelStartFunction) * $5 * $8 * "undefined" * "@" * "'&retorno'" * "@" * "~";
         $$ = $2 * "&" * $2 * "{}" * "=" * "'&funcao'" * labelStartFunction * "[=]" * "^";
+        removeScope();
     }
     | BLOCK { if(DEBUG) cerr << "CMD -> BLOCK" << endl; $$ = $1; }
     | SEMICOLON { if(DEBUG) cerr << "CMD -> SEMICOLON" << endl; $$ = vector<string>(); }
     ;
 
-PARAMS : ID COMMA { actualParam++; } PARAMS {
-            if(DEBUG) cerr << "PARAMS -> ID COMMA PARAMS" << endl;
+PARAMS : PARAMS_LIST { if(DEBUG) cerr << "PARAMS -> PARAMS_LIST" << endl; $$ = $1; }
+       | { if(DEBUG) cerr << "PARAMS -> " << endl; $$ = vector<string>(); }
+       ;
+
+PARAMS_LIST : ID COMMA { checkVariableExists($1); actualParam++; } PARAMS {
+            if(DEBUG) cerr << "PARAMS_LIST -> ID COMMA PARAMS_LIST" << endl;
             actualParam--;
             $$ = $1 * "&" * $1 * "arguments" * "@" * to_string(actualParam) * "[@]" * "=" * "^" * $4;
         }
        | ID {
-            if(DEBUG) cerr << "PARAMS -> ID" << endl;
+            if(DEBUG) cerr << "PARAMS_LIST -> ID" << endl;
+            checkVariableExists($1);
             $$ = $1 * "&" * $1 * "arguments" * "@" * to_string(actualParam) * "[@]" * "=" * "^";
         }
-       | { if(DEBUG) cerr << "PARAMS -> " << endl; $$ = vector<string>(); }
        ;
 
 BLOCK : OPEN_CURLY {addScope();} CMD CMDs CLOSE_CURLY {
@@ -196,6 +204,24 @@ EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
      | EXPR GREATER EXPR { if(DEBUG) cerr << "EXPR -> EXPR GREATER EXPR" << endl; $$ = $1 * $3 * $2; }
      | EXPR LESS EXPR { if(DEBUG) cerr << "EXPR -> EXPR LESS EXPR" << endl; $$ = $1 * $3 * $2; }
      | EXPR EQUAL_EQUAL EXPR { if(DEBUG) cerr << "EXPR -> EXPR EQUAL_EQUAL EXPR" << endl; $$ = $1 * $3 * $2; }
+     | FUNCTION_CALL { if(DEBUG) cerr << "EXPR -> FUNCTION_CALL" << endl; $$ = $1; }
+     ;
+
+FUNCTION_CALL : ID OPEN_PAR {checkVariableNew($1); functionCalling++; totalParamsFunction.push_back(0);} FUNCTION_CALL_PARAMS CLOSE_PAR {
+                    if(DEBUG) cerr << "FUNCTION_CALL -> ID OPEN_PAR FUNCTION_CALL_PARAMS CLOSE_PAR" << endl;
+                    $$ = $4 * to_string(totalParamsFunction[functionCalling]) * $1 * "@" * "$";
+                    functionCalling--;
+                    totalParamsFunction.pop_back();
+                }
+              ;
+
+FUNCTION_CALL_PARAMS : FUNCTION_CALL_PARAMS_LIST { if(DEBUG) cerr << "FUNCTION_CALL_PARAMS -> FUNCTION_CALL_PARAMS_LIST" << endl; $$ = $1; }
+                     | { if(DEBUG) cerr << "FUNCTION_CALL_PARAMS -> " << endl; $$ = vector<string>(); totalParamsFunction[functionCalling] = 0; }
+                     ;
+
+FUNCTION_CALL_PARAMS_LIST : RVALUE { if(DEBUG) cerr << "FUNCTION_CALL_PARAMS_LIST -> RVALUE" << endl; $$ = $1; totalParamsFunction[functionCalling]++; }
+                          | RVALUE COMMA FUNCTION_CALL_PARAMS_LIST { if(DEBUG) cerr << "FUNCTION_CALL_PARAMS_LIST -> RVALUE COMMA FUNCTION_CALL_PARAMS_LIST" << endl; $$ = $1 * $3; totalParamsFunction[functionCalling]++; }
+                          ;
 %%
 
 #include "lex.yy.c"
@@ -260,7 +286,14 @@ void printCode(Attributes a){
 }
 
 void checkVariableNew(Attributes a){
-    if(variables[actualScope].find(a.c[0]) == variables[actualScope].end()){
+    bool found = false;
+    for(int i = actualScope; i >= 0; i--){
+        if(variables[i].find(a.c[0]) != variables[i].end()){
+            found = true;
+            break;
+        }
+    }
+    if(!found){
         cout << "Erro: a variável '" << a.c[0] << "' não foi declarada." << endl;
         exit(1);
     }
