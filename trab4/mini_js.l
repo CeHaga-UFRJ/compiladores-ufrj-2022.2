@@ -7,6 +7,7 @@ STR1DQ \"(\\.|\"\"|[^"])*\"
 STR1SQ \'(\\.|\'\'|[^'])*\'
 
 EMPTY_OBJECT \{([ \t\n])*\}
+EMPTY_ARRAY \[([ \t\n])*\]
 
 %%
 
@@ -23,11 +24,18 @@ EMPTY_OBJECT \{([ \t\n])*\}
 "for"           { yylval.c = vector<string>(); yylval.line = line; return FOR; }
 "function"      { yylval.c = vector<string>(); yylval.line = line; return FUNCTION; }
 "return"        { yylval.c = vector<string>(); yylval.line = line; return RETURN; }
+"asm{".*"}"     { 
+                    yylval.c = vector<string>();
+                    string asmRawCode = yytext;
+                    string asmCode = asmRawCode.substr(4, asmRawCode.size() - 5);
+                    yylval.c = split(asmCode, ' ');
+                    return ASM;
+                }
 "="             { yylval.c = vector<string>(1, "="); yylval.line = line; return EQUAL; }
 ";"             { yylval.c = vector<string>(1, ";"); yylval.line = line; return SEMICOLON; }
 ","             { yylval.c = vector<string>(1, ","); yylval.line = line; return COMMA; }
 {EMPTY_OBJECT}  { yylval.c = vector<string>(1, "{}"); yylval.line = line; return EMPTY_OBJ; }
-"[]"            { yylval.c = vector<string>(1, "[]"); yylval.line = line; return EMPTY_ARR; }
+{EMPTY_ARRAY}   { yylval.c = vector<string>(1, "[]"); yylval.line = line; return EMPTY_ARR; }
 "("             { yylval.c = vector<string>(1, "("); yylval.line = line; return OPEN_PAR; }
 ")"             { yylval.c = vector<string>(1, ")"); yylval.line = line; return CLOSE_PAR; }
 "["             { yylval.c = vector<string>(1, "["); yylval.line = line; return OPEN_BRA; }

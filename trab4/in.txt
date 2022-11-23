@@ -1,8 +1,13 @@
-let str = "hello";
-function valor() { return str + ", world"; }
-var a = valor();
-str = "HELLO";;;
-var b = valor
-(
-)
-;
+const a = 9;
+function log( msg ) {
+  msg asm{println # undefined};
+}
+
+var c = [
+];
+log( c );
+{ let a = 3.1; }
+{ const a = 8;
+  let b = 7;
+  c = b; }
+var c = c+ c++;
