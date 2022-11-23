@@ -35,6 +35,7 @@
     Attributes operator*(string a, string b);
     vector<string> toVector(string a);
     void useVariable(Attributes a);
+    void setVariable(Attributes a);
     void declareVariableLet(Attributes a);
     void declareVariableConst(Attributes a);
     void declareVariableVar(Attributes a);
@@ -56,6 +57,7 @@
     int actualParam = 0;
     vector<int> totalParamsFunction;
     int functionCalling = -1;
+    int inFunction = 0;
 %}
 
 %token NUM ID LET VAR CONST SEMICOLON COMMA DOT FUNCTION RETURN ASM
@@ -125,12 +127,13 @@ CMD : LET DECLs_LET SEMICOLON { if(DEBUG) cerr << "CMD -> LET DECLs_LET SEMICOLO
         string labelCodeFor = generateLabel("LABEL_CODE_FOR");
         $$ = $4 * (":" + labelStartFor) * $6 * labelCodeFor * "?" * labelEndFor * "#" * (":" + labelCodeFor) * $10 * $8 * labelStartFor * "#" * (":" + labelEndFor);
     }
-    | FUNCTION ID OPEN_PAR { actualParam = 0; declareVariableLet($2); addScope(); } PARAMS CLOSE_PAR OPEN_CURLY CMDs CLOSE_CURLY {
+    | FUNCTION ID OPEN_PAR { actualParam = 0; declareVariableLet($2); addScope(); inFunction = 1; } PARAMS CLOSE_PAR OPEN_CURLY CMDs CLOSE_CURLY {
         if(DEBUG) cerr << "CMD -> FUNCTION ID OPEN_PAR PARAMS CLOSE_PAR OPEN_CURLY " << endl;
         string labelStartFunction = generateLabel("LABEL_START_FUNCTION");
         functions = functions * (":" + labelStartFunction) * $5 * $8 * "undefined" * "@" * "'&retorno'" * "@" * "~";
         $$ = $2 * "&" * $2 * "{}" * "=" * "'&funcao'" * labelStartFunction * "[=]" * "^";
         removeScope();
+        inFunction = 0;
     }
     | BLOCK { if(DEBUG) cerr << "CMD -> BLOCK" << endl; $$ = $1; }
     | SEMICOLON { if(DEBUG) cerr << "CMD -> SEMICOLON" << endl; $$ = vector<string>(); }
@@ -199,11 +202,14 @@ ATRs : ATR { if(DEBUG) cerr << "ATRs -> ATR" << endl; $$ = $1; }
      | ATRs COMMA ATR { if(DEBUG) cerr << "ATRs -> ATR COMMA ATRs" << endl; $$ = $1 * $3; }
     ;
 
-ATR : LVALUE EQUAL RVALUE { if(DEBUG) cerr << "ATR -> LVALUE EQUAL RVALUE" << endl; $$ = $1 * $3 * "=" * "^"; }
-    | LVALUE PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> LVALUE PLUS_EQUAL RVALUE" << endl; $$ = $1 * $1 * "@" * $3 * "+" * "=" * "^"; }
+ATR : LVALUE_ATR EQUAL RVALUE { if(DEBUG) cerr << "ATR -> LVALUE_ATR EQUAL RVALUE" << endl; $$ = $1 * $3 * "=" * "^"; }
+    | LVALUE_ATR PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> LVALUE_ATR PLUS_EQUAL RVALUE" << endl; $$ = $1 * $1 * "@" * $3 * "+" * "=" * "^"; }
     | LVALUEPROP PLUS_EQUAL RVALUE { if(DEBUG) cerr << "ATR -> LVALUEPROP PLUS_EQUAL RVALUE" << endl; $$ = $1 * $1 * "[@]" * $3 * "+" * "[=]" * "^"; }
     | LVALUEPROP EQUAL RVALUE { if(DEBUG) cerr << "ATR -> LVALUEPROP EQUAL RVALUE" << endl; $$ = $1 * $3 * "[=]" * "^"; }
     ;
+
+LVALUE_ATR : ID { if(DEBUG) cerr << "LVALUE_ATR -> ID" << endl; setVariable($1); $$ = $1; }
+           ;
 
 LVALUE : ID { if(DEBUG) cerr << "LVALUE -> ID" << endl; useVariable($1); $$ = $1; }
        ;
@@ -358,6 +364,7 @@ void declareVariableConst(Attributes a){
 }
 
 void useVariable(Attributes a){
+    if(inFunction) return;
     bool found = false;
     for(int i = actualScope; i >= 0; i--){
         if(variablesLet[i].find(a.c[0]) != variablesLet[i].end()){
@@ -369,7 +376,30 @@ void useVariable(Attributes a){
             break;
         }
         if(variablesConst[i].find(a.c[0]) != variablesConst[i].end()){
-            cout << "Erro: a variável '" << a.c[0] << "' não foi declarada." << endl;
+            found = true;
+            break;
+        }
+    }
+    if(!found){
+        cout << "Erro: a variável '" << a.c[0] << "' não foi declarada." << endl;
+        exit(1);
+    }
+}
+
+
+void setVariable(Attributes a){
+    bool found = false;
+    for(int i = actualScope; i >= 0; i--){
+        if(variablesLet[i].find(a.c[0]) != variablesLet[i].end()){
+            found = true;
+            break;
+        }
+        if(variablesVar[i].find(a.c[0]) != variablesVar[i].end()){
+            found = true;
+            break;
+        }
+        if(variablesConst[i].find(a.c[0]) != variablesConst[i].end()){
+            cout << "Erro: a constante '" << a.c[0] << "' não pode ser redefinida." << endl;
             exit(1);
         }
     }

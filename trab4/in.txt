@@ -1,13 +1,2 @@
-const a = 9;
-function log( msg ) {
-  msg asm{println # undefined};
-}
-
-var c = [
-];
-log( c );
-{ let a = 3.1; }
-{ const a = 8;
-  let b = 7;
-  c = b; }
-var c = c+ c++;
+function sqr(x) { return x*x + y; }
+let y = 0.01, a = sqr( 5.2, 7 );
