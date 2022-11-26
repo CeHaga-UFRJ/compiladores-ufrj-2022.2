@@ -47,6 +47,7 @@ EMPTY_ARRAY \[([ \t\n])*\]
 "-"             { yylval.c = vector<string>(1, "-"); yylval.line = line; return MINUS; }
 "*"             { yylval.c = vector<string>(1, "*"); yylval.line = line; return MULT; }
 "/"             { yylval.c = vector<string>(1, "/"); yylval.line = line; return DIV; }
+"%"             { yylval.c = vector<string>(1, "%"); yylval.line = line; return MOD; }
 "+="            { yylval.c = vector<string>{"+", "="}; yylval.line = line; return PLUS_EQUAL; }
 "++"            { yylval.c = vector<string>(); yylval.line = line; return PLUS_PLUS; }
 ">"             { yylval.c = vector<string>(1, ">"); yylval.line = line; return GREATER; }

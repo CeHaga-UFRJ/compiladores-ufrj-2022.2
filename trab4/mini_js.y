@@ -62,7 +62,7 @@
 
 %token NUM ID LET VAR CONST SEMICOLON COMMA DOT FUNCTION RETURN ASM
 %token STR EMPTY_OBJ EMPTY_ARR
-%token EQUAL PLUS MINUS MULT DIV PLUS_EQUAL PLUS_PLUS
+%token EQUAL PLUS MINUS MULT DIV PLUS_EQUAL PLUS_PLUS MOD
 %token GREATER LESS EQUAL_EQUAL
 %token IF ELSE WHILE FOR
 %token OPEN_PAR CLOSE_PAR OPEN_BRA CLOSE_BRA OPEN_CURLY CLOSE_CURLY
@@ -71,7 +71,7 @@
 
 %left GREATER LESS EQUAL_EQUAL
 %left PLUS MINUS
-%left MULT DIV
+%left MULT DIV MOD
 %right PLUS_PLUS
 %right EQUAL
 
@@ -233,6 +233,7 @@ EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
      | EXPR MINUS EXPR { if(DEBUG) cerr << "EXPR -> EXPR MINUS EXPR" << endl; $$ = $1 * $3 * $2; }
      | EXPR MULT EXPR { if(DEBUG) cerr << "EXPR -> EXPR MULT EXPR" << endl; $$ = $1 * $3 * $2; }
      | EXPR DIV EXPR { if(DEBUG) cerr << "EXPR -> EXPR DIV EXPR" << endl; $$ = $1 * $3 * $2; }
+     | EXPR MOD EXPR { if(DEBUG) cerr << "EXPR -> EXPR MOD EXPR" << endl; $$ = $1 * $3 * $2; }
      | OPEN_PAR EXPR CLOSE_PAR { if(DEBUG) cerr << "EXPR -> OPEN_PAR EXPR CLOSE_PAR" << endl; $$ = $2; }
      | MINUS EXPR { if(DEBUG) cerr << "EXPR -> MINUS EXPR" << endl; $$ = "0" * $2 * "-"; }
      | EXPR GREATER EXPR { if(DEBUG) cerr << "EXPR -> EXPR GREATER EXPR" << endl; $$ = $1 * $3 * $2; }
