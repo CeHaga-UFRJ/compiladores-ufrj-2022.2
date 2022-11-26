@@ -241,9 +241,15 @@ EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
      | FUNCTION_CALL { if(DEBUG) cerr << "EXPR -> FUNCTION_CALL" << endl; $$ = $1; }
      ;
 
-FUNCTION_CALL : ID OPEN_PAR {useVariable($1); functionCalling++; totalParamsFunction.push_back(0);} FUNCTION_CALL_PARAMS CLOSE_PAR {
-                    if(DEBUG) cerr << "FUNCTION_CALL -> ID OPEN_PAR FUNCTION_CALL_PARAMS CLOSE_PAR" << endl;
+FUNCTION_CALL : LVALUE OPEN_PAR {useVariable($1); functionCalling++; totalParamsFunction.push_back(0);} FUNCTION_CALL_PARAMS CLOSE_PAR {
+                    if(DEBUG) cerr << "FUNCTION_CALL -> LVALUE OPEN_PAR FUNCTION_CALL_PARAMS CLOSE_PAR" << endl;
                     $$ = $4 * to_string(totalParamsFunction[functionCalling]) * $1 * "@" * "$";
+                    functionCalling--;
+                    totalParamsFunction.pop_back();
+                }
+              | LVALUEPROP OPEN_PAR {functionCalling++; totalParamsFunction.push_back(0);} FUNCTION_CALL_PARAMS CLOSE_PAR {
+                    if(DEBUG) cerr << "FUNCTION_CALL -> LVALUEPROP OPEN_PAR FUNCTION_CALL_PARAMS CLOSE_PAR" << endl;
+                    $$ = $4 * to_string(totalParamsFunction[functionCalling]) * $1 * "[@]" * "$";
                     functionCalling--;
                     totalParamsFunction.pop_back();
                 }
