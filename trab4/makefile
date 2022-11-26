@@ -4,6 +4,9 @@ all: mini_js in.txt
 d: mini_js_debug in.txt
 	./mini_js_debug < in.txt > out.txt
 
+y: 
+	yacc mini_js.y -Wcounterexamples
+
 lex.yy.c: mini_js.l
 	lex mini_js.l
 

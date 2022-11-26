@@ -15,6 +15,8 @@ EMPTY_ARRAY \[([ \t\n])*\]
 {STR1DQ}        { yylval.c = vector<string>(1, yytext); yylval.line = line; return STR; }
 {STR1SQ}        { yylval.c = vector<string>(1, yytext); yylval.line = line; return STR; }
 
+"true"          { yylval.c = vector<string>(1, yytext); yylval.line = line; return TRUE; }
+"false"         { yylval.c = vector<string>(1, yytext); yylval.line = line; return FALSE; }
 "let"           { yylval.c = vector<string>(1, "&"); yylval.line = line; return LET; }
 "var"           { yylval.c = vector<string>(1, "&"); yylval.line = line; return VAR; }
 "const"         { yylval.c = vector<string>(1, "&"); yylval.line = line; return CONST; }

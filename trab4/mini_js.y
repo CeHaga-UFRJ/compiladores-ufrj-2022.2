@@ -63,7 +63,7 @@
 %token NUM ID LET VAR CONST SEMICOLON COMMA DOT FUNCTION RETURN ASM
 %token STR EMPTY_OBJ EMPTY_ARR
 %token EQUAL PLUS MINUS MULT DIV PLUS_EQUAL PLUS_PLUS MOD
-%token GREATER LESS EQUAL_EQUAL
+%token GREATER LESS EQUAL_EQUAL TRUE FALSE
 %token IF ELSE WHILE FOR
 %token OPEN_PAR CLOSE_PAR OPEN_BRA CLOSE_BRA OPEN_CURLY CLOSE_CURLY
 
@@ -226,6 +226,8 @@ EXPR : NUM { if(DEBUG) cerr << "EXPR -> NUM" << endl; $$ = $1; }
      | STR { if(DEBUG) cerr << "EXPR -> STR" << endl; $$ = $1; }
      | EMPTY_ARR { if(DEBUG) cerr << "EXPR -> EMPTY_ARR" << endl; $$ = $1; }
      | EMPTY_OBJ { if(DEBUG) cerr << "EXPR -> EMPTY_OBJ" << endl; $$ = $1; }
+     | TRUE { if(DEBUG) cerr << "EXPR -> TRUE" << endl; $$ = $1; }
+     | FALSE { if(DEBUG) cerr << "EXPR -> FALSE" << endl; $$ = $1; }
      | ID { if(DEBUG) cerr << "EXPR -> LVALUE" << endl; useVariable($1); $$ = $1 * "@"; }
      | ID PLUS_PLUS { if(DEBUG) cerr << "EXPR -> ID PLUS_PLUS" << endl; $$ = $1 * $1 * "@" * "1" * "+" * "=" * "1" * "-"; }
      | ID FIELDS { if(DEBUG) cerr << "EXPR -> ID FIELDS" << endl; useVariable($1); $$ = $1 * "@" * $2 * "[@]"; }
